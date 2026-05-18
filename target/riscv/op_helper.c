@@ -214,6 +214,39 @@ void helper_cbo_zero(CPURISCVState *env, target_ulong address)
     }
 }
 
+void helper_xg233ai_dma(CPURISCVState *env, target_ulong dst,
+                        target_ulong src, target_ulong grain)
+{
+    int n;
+    uintptr_t ra = GETPC();
+    int mmu_idx = cpu_mmu_index(env_cpu(env), false);
+    MemOpIdx oi = make_memop_idx(MO_LEUL, mmu_idx);
+
+    switch (grain) {
+    case 0:
+        n = 8;
+        break;
+    case 1:
+        n = 16;
+        break;
+    case 2:
+        n = 32;
+        break;
+    default:
+        riscv_raise_exception(env, RISCV_EXCP_ILLEGAL_INST, ra);
+    }
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            target_ulong saddr = src + (target_ulong)(i * n + j) * 4;
+            target_ulong daddr = dst + (target_ulong)(j * n + i) * 4;
+            uint32_t v = cpu_ldl_mmu(env, saddr, oi, ra);
+
+            cpu_stl_mmu(env, daddr, v, oi, ra);
+        }
+    }
+}
+
 /*
  * check_zicbom_access
  *
