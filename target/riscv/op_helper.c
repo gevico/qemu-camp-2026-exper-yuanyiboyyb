@@ -246,7 +246,86 @@ void helper_xg233ai_dma(CPURISCVState *env, target_ulong dst,
         }
     }
 }
+void helper_xg233ai_sort(CPURISCVState *env, target_ulong array,
+                        target_ulong all, target_ulong num)
+{
+     // --- PC 和 MMU 设置 ---
+    uintptr_t ra = GETPC();
+    int mmu_idx = cpu_mmu_index(env_cpu(env), false);
+    MemOpIdx oi = make_memop_idx(MO_LEUL, mmu_idx);
 
+    // --- 安全检查 ---
+    if (unlikely(num > all)) {
+        riscv_raise_exception(env, RISCV_EXCP_ILLEGAL_INST, GETPC());
+        return;
+    }
+
+    // --- 只有元素 >= 2 才排序 ---
+    if (num < 2) {
+        return;
+    }
+
+    // --- 冒泡排序 ---
+    for (int i = 0; i < num - 1; i++) {
+        for (int j = 0; j < num - i - 1; j++) {
+            target_ulong addr1 = array + j * sizeof(uint32_t);
+            target_ulong addr2 = array + (j + 1) * sizeof(uint32_t);
+
+            uint32_t val1 = cpu_ldl_mmu(env, addr1, oi, ra);
+            uint32_t val2 = cpu_ldl_mmu(env, addr2, oi, ra);
+
+            if (val1 > val2) {
+                cpu_stl_mmu(env, addr1, val2, oi, ra);
+                cpu_stl_mmu(env, addr2, val1, oi, ra);
+            }
+        }
+    }
+}
+void helper_xg233ai_crush(CPURISCVState *env, target_ulong src,
+                        target_ulong dst, target_ulong num)
+{
+     // --- PC 和 MMU 设置 ---
+    uintptr_t ra = GETPC();
+    int mmu_idx = cpu_mmu_index(env_cpu(env), false);
+    MemOpIdx oi = make_memop_idx(MO_LEUL, mmu_idx);
+    size_t i;
+    for(i=0;i<num/2;i++){
+        target_ulong addr1 = src + (i<<1);
+        target_ulong addr2 = src + ((i<<1)+1);
+        target_ulong addr3 = dst + i;
+        uint8_t val1 = cpu_ldb_mmu(env, addr1, oi, ra);
+        uint8_t val2 = cpu_ldb_mmu(env, addr2, oi, ra);
+        uint8_t val3 = (val1 & 0x0F) | ((val2 & 0x0F) << 4);
+        cpu_stb_mmu(env, addr3, val3, oi, ra);
+    }
+    if((num&0x01)==1){
+        target_ulong addr1 = src + (i<<1);
+        target_ulong addr3 = dst + i ;
+        uint8_t val1 = cpu_ldb_mmu(env, addr1, oi, ra);
+        uint8_t val3 = (val1 & 0x0F);
+        cpu_stb_mmu(env, addr3, val3, oi, ra);
+    }
+
+}
+void helper_xg233ai_expand(CPURISCVState *env, target_ulong src,
+                        target_ulong dst, target_ulong num)
+{
+     // --- PC 和 MMU 设置 ---
+    uintptr_t ra = GETPC();
+    int mmu_idx = cpu_mmu_index(env_cpu(env), false);
+    MemOpIdx oi = make_memop_idx(MO_LEUL, mmu_idx);
+    size_t i;
+    for(i=0;i<num;i++){
+        target_ulong addr1 = src + i;
+        target_ulong addr2 = dst + (i<<1);
+        target_ulong addr3 = dst + (i<<1)+1;
+        uint8_t val1 = cpu_ldb_mmu(env, addr1, oi, ra);
+        uint8_t val2 = val1 & 0x0F;
+        uint8_t val3 = (val1 & 0xF0) >> 4;
+        cpu_stb_mmu(env, addr2, val2, oi, ra);
+        cpu_stb_mmu(env, addr3, val3, oi, ra);
+    }
+}
 /*
  * check_zicbom_access
  *

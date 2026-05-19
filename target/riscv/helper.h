@@ -1293,3 +1293,6 @@ DEF_HELPER_1(ssamoswap_disabled, void, env)
 
 /*my test*/
 DEF_HELPER_4(xg233ai_dma, void, env, tl, tl, tl)
+DEF_HELPER_4(xg233ai_sort, void, env, tl, tl, tl)
+DEF_HELPER_4(xg233ai_crush, void, env, tl, tl, tl)
+DEF_HELPER_4(xg233ai_expand, void, env, tl, tl, tl)
