@@ -40,15 +40,7 @@ static bool trans_sort(DisasContext *ctx, arg_sort *a)
     return true;
 }
 
-static bool trans_gemm(DisasContext *ctx, arg_sort *a)
-{
-    return false;
-}
 
-static bool trans_vadd(DisasContext *ctx, arg_vadd *a)
-{
-    return false;
-}
 /*
  * crush(src, dst, num)
  *   src   : x[rs1]  (src array address)
@@ -217,5 +209,52 @@ static bool trans_vmax(DisasContext *ctx, arg_vmax *a)
     tcg_gen_ext_i32_tl(min_val, min);
     gen_set_gpr(ctx,a->rd, min_val);
 
+    return true;
+}
+static bool trans_gemm(DisasContext *ctx, arg_sort *a)
+{
+    TCGv src1  = get_gpr(ctx, a->rs1, EXT_NONE);
+    TCGv src2 = get_gpr(ctx, a->rs2, EXT_NONE);
+    TCGv dst = get_gpr(ctx, a->rd, EXT_NONE);
+    gen_helper_xg233ai_gemm(tcg_env, src1, src2, dst);
+    return true;
+}
+
+static bool trans_vadd(DisasContext *ctx, arg_vadd *a)
+{
+    TCGv src1_base = get_gpr(ctx, a->rs1, EXT_NONE);
+    TCGv src2_base = get_gpr(ctx, a->rs2, EXT_NONE);
+    TCGv dst_base = get_gpr(ctx, a->rd, EXT_NONE);
+
+    TCGv i = tcg_temp_new();
+    TCGv const16 = tcg_constant_tl(16);
+    TCGv off = tcg_temp_new();
+    TCGv src1_addr = tcg_temp_new();
+    TCGv src2_addr = tcg_temp_new();
+    TCGv dst_addr = tcg_temp_new();
+    TCGv_i32 src1_val = tcg_temp_new_i32();
+    TCGv_i32 src2_val = tcg_temp_new_i32();
+    TCGv_i32 dst_val = tcg_temp_new_i32();
+    TCGLabel *loop = gen_new_label();
+    TCGLabel *done = gen_new_label();
+
+    tcg_gen_movi_tl(i,0);
+    gen_set_label(loop);
+    tcg_gen_brcond_tl(TCG_COND_GEU,i,const16,done);
+
+    tcg_gen_shli_tl(off,i,2);
+    tcg_gen_addi_tl(i, i, 1);
+
+    tcg_gen_add_tl(src1_addr,src1_base,off);
+    tcg_gen_add_tl(src2_addr,src2_base,off);
+    tcg_gen_add_tl(dst_addr,dst_base,off);
+
+    tcg_gen_qemu_ld_i32(src1_val,src1_addr,ctx->mem_idx,MO_TESL);
+    tcg_gen_qemu_ld_i32(src2_val,src2_addr,ctx->mem_idx,MO_TESL);
+    tcg_gen_add_i32(dst_val,src1_val,src2_val);
+    tcg_gen_qemu_st_i32(dst_val,dst_addr,ctx->mem_idx,MO_TESL);
+    tcg_gen_br(loop);
+
+    gen_set_label(done);
     return true;
 }

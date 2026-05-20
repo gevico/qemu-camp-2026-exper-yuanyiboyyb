@@ -326,6 +326,29 @@ void helper_xg233ai_expand(CPURISCVState *env, target_ulong src,
         cpu_stb_mmu(env, addr3, val3, oi, ra);
     }
 }
+
+void helper_xg233ai_gemm(CPURISCVState *env, target_ulong src1,
+                        target_ulong src2, target_ulong dst)
+{
+     // --- PC 和 MMU 设置 ---
+    uintptr_t ra = GETPC();
+    int mmu_idx = cpu_mmu_index(env_cpu(env), false);
+    MemOpIdx oi = make_memop_idx(MO_LEUL, mmu_idx);
+    for(size_t i=0;i<4;i++){
+        for(size_t j=0;j<4;j++){
+            int acc = 0;
+            for (size_t k=0;k<4;k++){
+                target_ulong addr1 = src1 + (i<<2)*sizeof(int32_t) + k*sizeof(int32_t);
+                target_ulong addr2 = src2 + (k<<2)*sizeof(int32_t) + j*sizeof(int32_t);
+                int32_t aval = cpu_ldl_mmu(env,addr1,oi,ra);
+                int32_t bval = cpu_ldl_mmu(env,addr2,oi,ra);
+                acc+=aval*bval;
+            }
+            target_ulong addr3 = dst + (i<<2)*sizeof(int32_t) + j*sizeof(int32_t);
+            cpu_stl_mmu(env, addr3, acc, oi, ra);
+        }
+    }
+}
 /*
  * check_zicbom_access
  *
