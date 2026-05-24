@@ -1,0 +1,2 @@
+subdir('watchdog')
+subdir('gpio')

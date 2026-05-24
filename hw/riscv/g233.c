@@ -1715,6 +1715,21 @@ static void virt_machine_init(MachineState *machine)
     sysbus_create_simple("goldfish_rtc", s->memmap[VIRT_RTC].base,
         qdev_get_gpio_in(mmio_irqchip, RTC_IRQ));
 
+    /* G233 fixed watchdog MMIO window at 0x10010000 */
+    object_initialize_child(OBJECT(machine), "g233-wdt", &s->wdt,
+                            TYPE_G233_WDT);
+    sysbus_realize(SYS_BUS_DEVICE(&s->wdt), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->wdt), 0, 0x10010000);
+    sysbus_connect_irq(SYS_BUS_DEVICE(&s->wdt), 0,qdev_get_gpio_in(mmio_irqchip, 4));
+    
+    object_initialize_child(OBJECT(machine), "g233-gpio", &s->gpio,
+                            TYPE_G233_GPIO);
+    sysbus_realize(SYS_BUS_DEVICE(&s->gpio), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, 0x10012000);
+    sysbus_connect_irq(SYS_BUS_DEVICE(&s->gpio), 0,qdev_get_gpio_in(mmio_irqchip, 2));
+    
+
+
     for (i = 0; i < ARRAY_SIZE(s->flash); i++) {
         /* Map legacy -drive if=pflash to machine properties */
         pflash_cfi01_legacy_drive(s->flash[i],
