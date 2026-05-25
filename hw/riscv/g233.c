@@ -1728,6 +1728,12 @@ static void virt_machine_init(MachineState *machine)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->gpio), 0, 0x10012000);
     sysbus_connect_irq(SYS_BUS_DEVICE(&s->gpio), 0,qdev_get_gpio_in(mmio_irqchip, 2));
     
+    object_initialize_child(OBJECT(machine), "g233-pwm", &s->pwm,
+                            TYPE_G233_PWM);
+    sysbus_realize(SYS_BUS_DEVICE(&s->pwm), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->pwm), 0, 0x10015000);
+    sysbus_connect_irq(SYS_BUS_DEVICE(&s->pwm), 0,qdev_get_gpio_in(mmio_irqchip, 3));
+    
 
 
     for (i = 0; i < ARRAY_SIZE(s->flash); i++) {

@@ -28,6 +28,7 @@
 #include "hw/intc/riscv_imsic.h"
 #include "hw/gevico/watchdog/g233_wdt.h"
 #include "hw/gevico/gpio/g233_gpio.h"
+#include "hw/gevico/pwm/g233_pwm.h"
 
 
 #define VIRT_CPUS_MAX_BITS             9
@@ -59,6 +60,7 @@ struct RISCVG233State {
     FWCfgState *fw_cfg;
     G233WDTState wdt;
     G233GPIOState gpio;
+    G233PWMState pwm;
 
     int fdt_size;
     bool have_aclint;
