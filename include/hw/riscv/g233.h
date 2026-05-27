@@ -29,6 +29,7 @@
 #include "hw/gevico/watchdog/g233_wdt.h"
 #include "hw/gevico/gpio/g233_gpio.h"
 #include "hw/gevico/pwm/g233_pwm.h"
+#include "hw/gevico/spi/g233_spi.h"
 
 
 #define VIRT_CPUS_MAX_BITS             9
@@ -61,6 +62,7 @@ struct RISCVG233State {
     G233WDTState wdt;
     G233GPIOState gpio;
     G233PWMState pwm;
+    G233SPIState spi;
 
     int fdt_size;
     bool have_aclint;

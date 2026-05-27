@@ -1684,6 +1684,7 @@ static void virt_machine_init(MachineState *machine)
     memory_region_add_subregion(system_memory, s->memmap[VIRT_MROM].base,
                                 mask_rom);
 
+
     /*
      * Init fw_cfg. Must be done before riscv_load_fdt, otherwise the
      * device tree cannot be altered and we get FDT_ERR_NOSPACE.
@@ -1734,7 +1735,33 @@ static void virt_machine_init(MachineState *machine)
     sysbus_mmio_map(SYS_BUS_DEVICE(&s->pwm), 0, 0x10015000);
     sysbus_connect_irq(SYS_BUS_DEVICE(&s->pwm), 0,qdev_get_gpio_in(mmio_irqchip, 3));
     
+    object_initialize_child(OBJECT(machine), "g233-spi", &s->spi,
+                            TYPE_G233_SPI);
+    sysbus_realize(SYS_BUS_DEVICE(&s->spi), &error_fatal);
+    sysbus_mmio_map(SYS_BUS_DEVICE(&s->spi), 0, 0x10018000);
+    sysbus_connect_irq(SYS_BUS_DEVICE(&s->spi), 0,qdev_get_gpio_in(mmio_irqchip, 5));
+ 
+    DeviceState *flash0_dev, *flash1_dev;
+    G233FLASHState *flash0, *flash1;   
+    /* Flash CS0 */
+    flash0_dev = qdev_new(TYPE_G233_FLASH);
+    qdev_prop_set_uint32(flash0_dev, "size", 2 * 1024 * 1024);
+    qdev_prop_set_uint32(flash0_dev, "jedec-id", 0xEF3015);
+    object_property_add_child(OBJECT(&s->spi), "flash0", OBJECT(flash0_dev));
+    qdev_realize(flash0_dev, NULL, &error_fatal);
+    flash0 = G233_FLASH(flash0_dev);
 
+    /* Flash CS1 */
+    flash1_dev = qdev_new(TYPE_G233_FLASH);
+    qdev_prop_set_uint32(flash1_dev, "size", 4 * 1024 * 1024);
+    qdev_prop_set_uint32(flash1_dev, "jedec-id", 0xEF3016);
+    object_property_add_child(OBJECT(&s->spi), "flash1", OBJECT(flash1_dev));
+    qdev_realize(flash1_dev, NULL, &error_fatal);
+    flash1 = G233_FLASH(flash1_dev);
+
+    /* Connect to SPI channels (CS slots) */
+    g233_spi_flash_connect(&s->spi, flash0);
+    g233_spi_flash_connect(&s->spi, flash1);
 
     for (i = 0; i < ARRAY_SIZE(s->flash); i++) {
         /* Map legacy -drive if=pflash to machine properties */

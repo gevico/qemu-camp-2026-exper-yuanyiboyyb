@@ -1,3 +1,5 @@
 subdir('watchdog')
 subdir('gpio')
 subdir('pwm')
+subdir('spi')
+subdir('flash')
