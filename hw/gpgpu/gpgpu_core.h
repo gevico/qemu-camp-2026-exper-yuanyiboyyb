@@ -139,6 +139,9 @@ void gpgpu_core_init_warp(GPGPUWarp *warp, uint32_t pc,
  */
 int gpgpu_core_exec_warp(GPGPUState *s, GPGPUWarp *warp, uint32_t max_cycles);
 
+int gpgpu_core_exec_lane(GPGPUState *s, GPGPUWarp *warp, uint32_t lane_id,
+                         uint32_t inst);
+
 /**
  * gpgpu_core_exec_kernel - 执行完整的 kernel
  * @s: GPGPU 设备状态

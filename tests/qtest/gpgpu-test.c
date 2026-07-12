@@ -572,7 +572,6 @@ static void gpgpu_test_kernel_exec(void *obj, void *data, QGuestAllocator *alloc
 
     /* 5. 触发内核执行 */
     qpci_io_writel(pdev, bar0, GPGPU_REG_DISPATCH, 1);
-
     /* 6. 检查执行完成 (设备不再忙) */
     val = qpci_io_readl(pdev, bar0, GPGPU_REG_GLOBAL_STATUS);
     g_assert_cmpuint(val & GPGPU_STATUS_READY, ==, GPGPU_STATUS_READY);
@@ -650,7 +649,6 @@ static void gpgpu_test_fp_kernel_exec(void *obj, void *data,
 
     /* 5. 触发内核执行 */
     qpci_io_writel(pdev, bar0, GPGPU_REG_DISPATCH, 1);
-
     /* 6. 检查执行完成 */
     val = qpci_io_readl(pdev, bar0, GPGPU_REG_GLOBAL_STATUS);
     g_assert_cmpuint(val & GPGPU_STATUS_READY, ==, GPGPU_STATUS_READY);
@@ -741,7 +739,6 @@ static void gpgpu_test_lp_convert(void *obj, void *data,
 
     /* 5. 触发内核执行 */
     qpci_io_writel(pdev, bar0, GPGPU_REG_DISPATCH, 1);
-
     /* 6. 检查执行完成 */
     val = qpci_io_readl(pdev, bar0, GPGPU_REG_GLOBAL_STATUS);
     g_assert_cmpuint(val & GPGPU_STATUS_READY, ==, GPGPU_STATUS_READY);
@@ -848,7 +845,6 @@ static void gpgpu_test_lp_convert_e5m2_e2m1(void *obj, void *data,
     qpci_io_writel(pdev, bar0, GPGPU_REG_BLOCK_DIM_Z, 1);
 
     qpci_io_writel(pdev, bar0, GPGPU_REG_DISPATCH, 1);
-
     val = qpci_io_readl(pdev, bar0, GPGPU_REG_GLOBAL_STATUS);
     g_assert_cmpuint(val & GPGPU_STATUS_READY, ==, GPGPU_STATUS_READY);
 
@@ -956,7 +952,6 @@ static void gpgpu_test_lp_convert_saturate(void *obj, void *data,
     qpci_io_writel(pdev, bar0, GPGPU_REG_BLOCK_DIM_Z, 1);
 
     qpci_io_writel(pdev, bar0, GPGPU_REG_DISPATCH, 1);
-
     val = qpci_io_readl(pdev, bar0, GPGPU_REG_GLOBAL_STATUS);
     g_assert_cmpuint(val & GPGPU_STATUS_READY, ==, GPGPU_STATUS_READY);
 
